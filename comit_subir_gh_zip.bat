@@ -27,10 +27,10 @@ for /f "tokens=1-2 delims=:" %%a in ("%time: =0%") do (
 set FECHA_HORA=%DIA%_%MES%_%ANIO%_%HORA%_%MIN%
 
 :: ── Rutas ─────────────────────────────────────────────────
-set CARPETA=K:\programacion_ia\Validacion_Template_1
+set CARPETA_PROYECTO=K:\programacion_ia\Validacion_Template_1
+set CARPETA_ZIP=K:\programacion_ia
 set NOMBRE_ZIP=Validacion_Template_1_%COMENTARIO%_%FECHA_HORA%.zip
-set CARPETAZIP=K:\programacion_ia\ 
-set RUTA_ZIP=%CARPETAZIP%\%NOMBRE_ZIP%
+set RUTA_ZIP=%CARPETA_ZIP%\%NOMBRE_ZIP%
 
 echo.
 echo [1/4] Agregando archivos...
@@ -42,12 +42,12 @@ git commit -m "%COMENTARIO%"
 echo [3/4] Haciendo push...
 git push origin master
 
-echo [4/4] Creando ZIP backup...
+echo [4/4] Creando ZIP backup en %CARPETA_ZIP%...
 echo.
 echo  Destino: %RUTA_ZIP%
 echo.
 
-powershell -NoProfile -Command "Compress-Archive -Path '%CARPETA%\*' -DestinationPath '%RUTA_ZIP%' -Force"
+powershell -NoProfile -Command "Compress-Archive -Path '%CARPETA_PROYECTO%\*' -DestinationPath '%RUTA_ZIP%' -Force"
 
 if %ERRORLEVEL% == 0 (
     echo.
