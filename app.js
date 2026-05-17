@@ -600,8 +600,8 @@
           ${dropHint}
         </div>
         <div class="special-fields-btns" style="padding: 0 12px 10px; display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="addSpecialRow('${sec.id}', 'text-free')">+ Texto Libre</button>
-            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="addSpecialRow('${sec.id}', 'dropdown-map')">+ Campo Dinámico</button>
+            <button class="action-btn btn-add-special" onclick="addSpecialRow('${sec.id}', 'text-free')">+ Texto Libre</button>
+            <button class="action-btn btn-add-special" onclick="addSpecialRow('${sec.id}', 'dropdown-map')">+ Campo Dinámico</button>
         </div>
       </div>`;
                 canvas.appendChild(el);

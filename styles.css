@@ -399,6 +399,19 @@
             transform: none;
         }
 
+        .btn-add-special {
+            background: linear-gradient(135deg, var(--accent2), #6345d9);
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 10px rgba(124, 92, 252, 0.3);
+            font-size: 12px;
+        }
+
+        .btn-add-special:hover {
+            box-shadow: 0 4px 15px rgba(124, 92, 252, 0.5);
+            transform: translateY(-1px);
+        }
+
         .template-canvas {
             flex: 1;
             overflow-y: auto;
