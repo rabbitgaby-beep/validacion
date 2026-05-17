@@ -13,10 +13,11 @@
             fkPrestInd: '',      // FK entre prestaciones e indicadores
             filterCol: '',       // columna para filtrar (ej: Ministerio)
             pdfConfig: {
-                title: 'Informe de Programas Sociales',
+                title: 'Relevamiento del Sistema de Protección Social',
                 groupBy: '',       // agrupar PDFs por esta columna
                 filterVigor: true, // solo Vigente = 1
                 vigorCol: '',
+                coverElements: []  // Nuevo arreglo para elementos de la portada
             }
         };
 
@@ -462,6 +463,52 @@
             if (sec) sec.title = val;
         }
 
+        // --- GESTIÓN DE ELEMENTOS DE PORTADA ---
+        function addCoverFreeText() {
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            state.pdfConfig.coverElements.push({ id: uniqueId, type: 'free', value: '' });
+            renderCoverElements();
+        }
+
+        function addCoverDynamicField() {
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            state.pdfConfig.coverElements.push({ id: uniqueId, type: 'dynamic', value: '' });
+            renderCoverElements();
+        }
+
+        function removeCoverElement(id) {
+            state.pdfConfig.coverElements = state.pdfConfig.coverElements.filter(e => e.id !== id);
+            renderCoverElements();
+        }
+
+        function updateCoverElement(id, field, val) {
+            const el = state.pdfConfig.coverElements.find(e => e.id === id);
+            if (el) el[field] = val;
+        }
+
+        function renderCoverElements() {
+            const container = document.getElementById('cover-elements-list');
+            if (!container) return;
+            const progH = state.headers.prog || [];
+            
+            container.innerHTML = state.pdfConfig.coverElements.map(el => {
+                let innerHtml = '';
+                if (el.type === 'free') {
+                    innerHtml = `<input class="config-input" type="text" value="${escAttr(el.value)}" placeholder="Texto libre..." oninput="updateCoverElement('${el.id}', 'value', this.value)">`;
+                } else if (el.type === 'dynamic') {
+                    const makeOpts = (selected) => progH.map(c => `<option value="${escAttr(c)}" ${selected === c ? 'selected' : ''}>${c}</option>`).join('');
+                    innerHtml = `<select class="config-input config-select" onchange="updateCoverElement('${el.id}', 'value', this.value)">
+                                    <option value="">— seleccionar columna —</option>
+                                    ${makeOpts(el.value)}
+                                 </select>`;
+                }
+                return `<div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                            <div style="flex: 1;">${innerHtml}</div>
+                            <button class="row-del" onclick="removeCoverElement('${el.id}')">✕</button>
+                        </div>`;
+            }).join('');
+        }
+
         // ══════════════════════════════════════════
         // RENDER PLANTILLA
         // ══════════════════════════════════════════
@@ -681,6 +728,14 @@
       </div></div>
     </div>
     <div class="config-section">
+      <div class="config-title">Portada (Elementos)</div>
+      <div class="special-fields-btns" style="margin-bottom: 8px; display: flex; gap: 8px;">
+        <button class="action-btn btn-add-special" onclick="addCoverFreeText()">+ Texto Libre</button>
+        <button class="action-btn btn-add-special" onclick="addCoverDynamicField()">+ Campo Dinámico</button>
+      </div>
+      <div id="cover-elements-list" class="cover-elements-list"></div>
+    </div>
+    <div class="config-section">
       <div class="config-title">Filtros</div>
       <div class="config-row">
         <input type="checkbox" class="config-checkbox" id="chk-vigor" ${state.pdfConfig.filterVigor ? 'checked' : ''}
@@ -719,6 +774,7 @@
         ${(state.headers.ind || []).map(c => `<option value="${escAttr(c)}" ${state.fkPrestInd === c ? 'selected' : ''}>${c}</option>`).join('')}
       </select>
     </div>`;
+            renderCoverElements();
         }
 
         function renderPreviewPanel(body) {
@@ -1121,14 +1177,33 @@
             }
 
             const content = [];
-            const docTitle = state.pdfConfig.title || 'Informe de Programas Sociales';
+            const docTitle = state.pdfConfig.title || 'Relevamiento del Sistema de Protección Social';
             
+            // Construir Stack de la Portada
+            const coverStack = [
+                { text: docTitle.toUpperCase(), style: 'docTitle' }
+            ];
+
+            if (state.pdfConfig.coverElements && state.pdfConfig.coverElements.length > 0) {
+                const firstRow = progRows.length > 0 ? progRows[0] : {};
+                state.pdfConfig.coverElements.forEach(el => {
+                    let textVal = '';
+                    if (el.type === 'free') {
+                        textVal = el.value;
+                    } else if (el.type === 'dynamic' && el.value) {
+                        textVal = getVal(firstRow, progH, el.value);
+                    }
+                    if (textVal) {
+                        coverStack.push({ text: String(textVal).toUpperCase(), style: 'docSub' });
+                    }
+                });
+            } else {
+                coverStack.push({ text: 'CONSEJO NACIONAL DE COORDINACIÓN DE POLÍTICAS SOCIALES', style: 'docSub' });
+            }
+
             // Portada
             content.push({ 
-                stack: [
-                    { text: docTitle.toUpperCase(), style: 'docTitle' },
-                    { text: 'CONSEJO NACIONAL DE COORDINACIÓN DE POLÍTICAS SOCIALES', style: 'docSub' }
-                ],
+                stack: coverStack,
                 margin: [0, 150, 0, 0],
                 pageBreak: 'after' 
             });
