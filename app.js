@@ -361,11 +361,12 @@
             renderFieldList();
         }
 
+        function getRowId(r) { return r.id || (r.sheet + '::' + r.col); }
+
         function addRowToSection(secId, sheet, col) {
             const sec = state.sections.find(s => s.id === secId);
             if (!sec) return;
-            // Evitar duplicados
-            if (sec.rows.find(r => r.sheet === sheet && r.col === col)) return;
+            if (sec.rows.find(r => r.sheet === sheet && r.col === col && !r.type)) return;
             sec.rows.push({
                 sheet, col,
                 label: col,
@@ -374,10 +375,35 @@
             renderTemplate();
             renderFieldList();
         }
-        function deleteRow(secId, colKey) {
+
+        function addSpecialRow(secId, type) {
             const sec = state.sections.find(s => s.id === secId);
             if (!sec) return;
-            sec.rows = sec.rows.filter(r => (r.sheet + '::' + r.col) !== colKey);
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            if (type === 'text-free') {
+                sec.rows.push({
+                    type: 'text-free',
+                    id: uniqueId,
+                    value: '',
+                    bold: false, big: false, bullet: false, table: false
+                });
+            } else if (type === 'dropdown-map') {
+                sec.rows.push({
+                    type: 'dropdown-map',
+                    id: uniqueId,
+                    label: 'Campo Dinámico',
+                    selectedSheet: '',
+                    selectedCol: '',
+                    bold: false, big: false, bullet: false, table: false
+                });
+            }
+            renderTemplate();
+        }
+
+        function deleteRow(secId, rowId) {
+            const sec = state.sections.find(s => s.id === secId);
+            if (!sec) return;
+            sec.rows = sec.rows.filter(r => getRowId(r) !== rowId);
             renderTemplate();
             renderFieldList();
         }
@@ -391,20 +417,44 @@
             renderTemplate();
         }
 
-        function toggleFmt(secId, colKey, fmt) {
+        function toggleFmt(secId, rowId, fmt) {
             const sec = state.sections.find(s => s.id === secId);
             if (!sec) return;
-            const row = sec.rows.find(r => (r.sheet + '::' + r.col) === colKey);
+            const row = sec.rows.find(r => getRowId(r) === rowId);
             if (!row) return;
             row[fmt] = !row[fmt];
             renderTemplate();
         }
 
-        function updateLabel(secId, colKey, val) {
+        function updateLabel(secId, rowId, val) {
             const sec = state.sections.find(s => s.id === secId);
             if (!sec) return;
-            const row = sec.rows.find(r => (r.sheet + '::' + r.col) === colKey);
+            const row = sec.rows.find(r => getRowId(r) === rowId);
             if (row) row.label = val;
+        }
+
+        function updateValue(secId, rowId, val) {
+            const sec = state.sections.find(s => s.id === secId);
+            if (!sec) return;
+            const row = sec.rows.find(r => getRowId(r) === rowId);
+            if (row) row.value = val;
+        }
+
+        function updateDropdown(secId, rowId, val) {
+            const sec = state.sections.find(s => s.id === secId);
+            if (!sec) return;
+            const row = sec.rows.find(r => getRowId(r) === rowId);
+            if (row) {
+                if (!val) {
+                    row.selectedSheet = '';
+                    row.selectedCol = '';
+                } else {
+                    const parts = val.split('::');
+                    row.selectedSheet = parts[0];
+                    row.selectedCol = parts[1];
+                }
+                renderTemplate();
+            }
         }
 
         function updateSectionTitle(secId, val) {
@@ -455,9 +505,39 @@
                 }
 
                 const rowsHtml = sec.rows.map((r, rowIndex) => {
-                    const ck = colKey(r);
-                    const dotClass = { prog: 'dot-prog', prest: 'dot-prest', ind: 'dot-ind' }[r.sheet] || '';
+                    const ck = getRowId(r);
+                    const dotClass = r.type ? 'dot-special' : ({ prog: 'dot-prog', prest: 'dot-prest', ind: 'dot-ind' }[r.sheet] || '');
                     const fmtBtn = (fmt, icon) => `<button class="fmt-btn ${r[fmt] ? 'active' : ''}" onclick="toggleFmt('${sec.id}','${ck}','${fmt}')" title="${fmt}">${icon}</button>`;
+                    
+                    let innerHtml = '';
+                    if (r.type === 'text-free') {
+                        innerHtml = `<input class="row-label-input" type="text" value="${escAttr(r.value)}" placeholder="Escribí texto libre..." 
+                          onchange="updateValue('${sec.id}','${ck}',this.value)"
+                          oninput="updateValue('${sec.id}','${ck}',this.value)" style="flex:1;">
+                        <span class="row-field-name" style="width:auto">📝</span>`;
+                    } else if (r.type === 'dropdown-map') {
+                        let opts = '<option value="">Seleccionar columna...</option>';
+                        ['prog', 'prest', 'ind'].forEach(s => {
+                            if (state.headers[s]) {
+                                state.headers[s].forEach(c => {
+                                    const val = `${s}::${c}`;
+                                    const sel = (r.selectedSheet === s && r.selectedCol === c) ? 'selected' : '';
+                                    opts += `<option value="${escAttr(val)}" ${sel}>[${s.toUpperCase()}] ${escAttr(c)}</option>`;
+                                });
+                            }
+                        });
+                        innerHtml = `<input class="row-label-input" type="text" value="${escAttr(r.label)}" placeholder="Label..." 
+                          onchange="updateLabel('${sec.id}','${ck}',this.value)"
+                          oninput="updateLabel('${sec.id}','${ck}',this.value)" style="width: 120px;">
+                        <select class="row-select-input" onchange="updateDropdown('${sec.id}','${ck}',this.value)" style="flex:1; margin:0 4px; border:1px solid var(--border); border-radius:4px; padding:2px;">${opts}</select>
+                        <span class="row-field-name" style="width:auto">🔄</span>`;
+                    } else {
+                        innerHtml = `<input class="row-label-input" type="text" value="${escAttr(r.label)}" placeholder="Label..." 
+                          onchange="updateLabel('${sec.id}','${ck}',this.value)"
+                          oninput="updateLabel('${sec.id}','${ck}',this.value)">
+                        <span class="row-field-name">{${r.col}}</span>`;
+                    }
+
                     return `<div class="template-row" draggable="true"
           ondragstart="onRowDragStart(event, '${sec.id}', ${rowIndex})"
           ondragend="onRowDragEnd(event)"
@@ -466,10 +546,7 @@
           ondrop="onRowDrop(event, '${sec.id}', ${rowIndex})">
         <span class="row-handle">⣿</span>
         <span class="row-dot ${dotClass}"></span>
-        <input class="row-label-input" type="text" value="${escAttr(r.label)}" placeholder="Label..." 
-          onchange="updateLabel('${sec.id}','${ck}',this.value)"
-          oninput="updateLabel('${sec.id}','${ck}',this.value)">
-        <span class="row-field-name">{${r.col}}</span>
+        ${innerHtml}
         <div class="row-format-btns">
           ${fmtBtn('bold', 'B')}
           ${fmtBtn('big', 'A+')}
@@ -521,6 +598,10 @@
           ondrop="onDropZoneDrop(event,'${sec.id}')">
           ${rowsHtml}
           ${dropHint}
+        </div>
+        <div class="special-fields-btns" style="padding: 0 12px 10px; display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="addSpecialRow('${sec.id}', 'text-free')">+ Texto Libre</button>
+            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="addSpecialRow('${sec.id}', 'dropdown-map')">+ Campo Dinámico</button>
         </div>
       </div>`;
                 canvas.appendChild(el);
@@ -983,6 +1064,26 @@
             paddingBottom: function (i, node) { return 5; }
         };
 
+        function getRowValue(r, progRow, pr, ir) {
+            if (r.type === 'text-free') return r.value;
+            
+            const sheet = r.type === 'dropdown-map' ? r.selectedSheet : r.sheet;
+            const col = r.type === 'dropdown-map' ? r.selectedCol : r.col;
+            
+            if (!sheet || !col) return null;
+            
+            if (sheet === 'prog') {
+                return getVal(progRow, state.headers.prog || [], col);
+            } else if (sheet === 'prest') {
+                if (!pr) return null;
+                return getVal(pr, state.headers.prest || [], col);
+            } else if (sheet === 'ind') {
+                if (!ir) return null;
+                return getVal(ir, state.headers.ind || [], col);
+            }
+            return null;
+        }
+
         function buildDocDefinition() {
             const progH = state.headers.prog;
             const vigorCol = state.pdfConfig.vigorCol;
@@ -1041,9 +1142,9 @@
                                 margin: [0, 0, 0, 6]
                             });
                             sec.rows.forEach(r => {
-                                if (r.sheet !== 'prog') return;
-                                const val = getVal(progRow, progH, r.col);
-                                if (!val) return;
+                                if (r.sheet && r.sheet !== 'prog' && !r.type) return;
+                                const val = getRowValue(r, progRow, null, null);
+                                if (!val && r.type !== 'text-free') return;
                                 injectFieldToPDF(r, val, content);
                             });
                         }
@@ -1071,9 +1172,9 @@
                                 });
                                 
                                 sec.rows.forEach(r => {
-                                    if (r.sheet !== 'prest') return;
-                                    const val = getVal(pr, prestH, r.col);
-                                    if (!val) return;
+                                    if (r.sheet && r.sheet !== 'prest' && !r.type) return;
+                                    const val = getRowValue(r, progRow, pr, null);
+                                    if (!val && r.type !== 'text-free') return;
                                     injectFieldToPDF(r, val, content);
                                 });
 
@@ -1092,14 +1193,14 @@
                                     }
 
                                     if (relInds.length > 0) {
-                                        const tableCols = indSec.rows.filter(r => r.sheet === 'ind');
+                                        const tableCols = indSec.rows.filter(r => (r.sheet === 'ind' || r.type) && r.table);
                                         const hasTable = indSec.rows.some(r => r.table);
 
                                         if (hasTable && tableCols.length > 0) {
                                             const tHeader = tableCols.map(r => ({ text: r.label, style: 'th' }));
                                             const tBody = [tHeader];
                                             relInds.forEach(ir => {
-                                                tBody.push(tableCols.map(r => ({ text: getVal(ir, indH, r.col) || 'S/I', style: 'td' })));
+                                                tBody.push(tableCols.map(r => ({ text: getRowValue(r, progRow, pr, ir) || 'S/I', style: 'td' })));
                                             });
                                             content.push({
                                                 table: {
@@ -1114,9 +1215,9 @@
                                             content.push({ text: 'Indicadores:', style: 'tableTitle', margin: [0, 5, 0, 2] });
                                             relInds.forEach(ir => {
                                                 indSec.rows.forEach(r => {
-                                                    if (r.sheet !== 'ind') return;
-                                                    const val = getVal(ir, indH, r.col);
-                                                    if (!val) return;
+                                                    if (r.sheet && r.sheet !== 'ind' && !r.type) return;
+                                                    const val = getRowValue(r, progRow, pr, ir);
+                                                    if (!val && r.type !== 'text-free') return;
                                                     injectFieldToPDF(r, val, content);
                                                 });
                                             });
@@ -1142,12 +1243,14 @@
                                 margin: [0, 0, 0, 6]
                             });
 
-                            const tableCols = sec.rows.filter(r => r.sheet === 'ind');
-                            if (tableCols.length > 0) {
+                            const tableCols = sec.rows.filter(r => (r.sheet === 'ind' || r.type) && r.table);
+                            const hasTable = sec.rows.some(r => r.table);
+                            
+                            if (hasTable && tableCols.length > 0) {
                                 const tHeader = tableCols.map(r => ({ text: r.label, style: 'th' }));
                                 const tBody = [tHeader];
                                 relInds.forEach(ir => {
-                                    tBody.push(tableCols.map(r => ({ text: getVal(ir, indH, r.col) || 'S/I', style: 'td' })));
+                                    tBody.push(tableCols.map(r => ({ text: getRowValue(r, progRow, null, ir) || 'S/I', style: 'td' })));
                                 });
                                 content.push({
                                     table: {
@@ -1157,6 +1260,15 @@
                                     },
                                     layout: tableLayout,
                                     margin: [0, 6, 0, 12]
+                                });
+                            } else {
+                                relInds.forEach(ir => {
+                                    sec.rows.forEach(r => {
+                                        if (r.sheet && r.sheet !== 'ind' && !r.type) return;
+                                        const val = getRowValue(r, progRow, null, ir);
+                                        if (!val && r.type !== 'text-free') return;
+                                        injectFieldToPDF(r, val, content);
+                                    });
                                 });
                             }
                         }
