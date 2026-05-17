@@ -182,10 +182,10 @@
         function onDropZoneDragEnter(e, secId) {
             e.preventDefault();
             document.getElementById('dz-' + secId).classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
         }
         function onDropZoneDragOver(e, secId) {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
             document.getElementById('dz-' + secId).classList.add('drag-over');
         }
         function onDropZoneDragLeave(secId) {
@@ -236,6 +236,7 @@
             draggedField = null;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('application/json', JSON.stringify({ type: 'reorder-sec', idx: secIdx }));
+            e.dataTransfer.setData('text/plain', 'sec-' + secIdx);
             setTimeout(() => e.target.classList.add('dragging-sec'), 0);
         }
         function onSecDragEnd(e) {
@@ -245,11 +246,11 @@
         function onSecDragEnter(e) {
             e.preventDefault();
             e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
         }
         function onSecDragOver(e) {
             e.preventDefault();
             e.stopPropagation();
-            e.dataTransfer.dropEffect = 'move';
         }
         function onSecDrop(e, targetIdx) {
             e.preventDefault();
@@ -272,6 +273,7 @@
             draggedField = null;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('application/json', JSON.stringify({ type: 'reorder', secId, idx }));
+            e.dataTransfer.setData('text/plain', 'row-' + idx);
             setTimeout(() => e.target.classList.add('dragging'), 0);
         }
         function onRowDragEnd(e) {
@@ -281,11 +283,11 @@
         function onRowDragEnter(e) {
             e.preventDefault();
             e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
         }
         function onRowDragOver(e) {
             e.preventDefault();
             e.stopPropagation();
-            e.dataTransfer.dropEffect = 'move';
         }
         function onRowDrop(e, targetSecId, targetIdx) {
             e.preventDefault();
