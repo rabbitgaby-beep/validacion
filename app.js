@@ -1301,15 +1301,17 @@
             });
 
             return {
-                pageMargins: [40, 100, 40, 40], // Margen superior a 100pt para que el contenido no tape el encabezado
+                pageMargins: [40, 105, 40, 40], // Margen superior a 105pt para compensar el nuevo alto de la imagen
                 header: function(currentPage) {
                     // La portada (página 1) no lleva encabezado
                     if (currentPage === 1) return null;
                     if (headerImgBase64) {
                         return {
                             image: 'data:image/png;base64,' + headerImgBase64,
-                            width: 450, // Aumentamos el tamaño de la imagen para que no sea tan chica
-                            margin: [40, 35, 0, 0] // 35pt desde el borde superior
+                            // Cálculo matemático exacto: 
+                            // Ancho A4 (595.28pt) - Margen Izq (40pt) - Margen Der (40pt) = 515.28pt
+                            width: 515.28, 
+                            margin: [40, 35, 0, 0] // 35pt desde el borde superior, anclado al margen izquierdo
                         };
                     }
                     return null;
