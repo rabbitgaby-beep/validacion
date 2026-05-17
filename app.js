@@ -1224,7 +1224,9 @@
                                             content.push({
                                                 table: {
                                                     headerRows: 1,
-                                                    widths: Array(tableCols.length).fill('*'),
+                                                    // Las primeras 2 columnas (ej: Indicador, Unidad) toman el espacio restante y dividen equitativamente.
+                                                    // El resto (ej: Año, Período, Dato) se ajustan a su contenido (auto) para no forzar desbordamiento.
+                                                    widths: tableCols.map((_, i) => (i < 2) ? '*' : 'auto'),
                                                     body: tBody
                                                 },
                                                 layout: tableLayout,
@@ -1274,7 +1276,9 @@
                                 content.push({
                                     table: {
                                         headerRows: 1,
-                                        widths: Array(tableCols.length).fill('*'),
+                                        // Las primeras 2 columnas (ej: Indicador, Unidad) toman el espacio restante y dividen equitativamente.
+                                        // El resto (ej: Año, Período, Dato) se ajustan a su contenido (auto) para no forzar desbordamiento.
+                                        widths: tableCols.map((_, i) => (i < 2) ? '*' : 'auto'),
                                         body: tBody
                                     },
                                     layout: tableLayout,
