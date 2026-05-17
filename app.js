@@ -760,9 +760,9 @@
                 if (sec.type === 'prog') {
                     html += `<div class="pdf-sec">${sec.title}</div>`;
                     sec.rows.forEach(r => {
-                        if (r.sheet !== 'prog') return;
-                        const val = getVal(progRow, progHeaders, r.col);
-                        if (!val) return;
+                        if (r.sheet && r.sheet !== 'prog' && !r.type) return;
+                        const val = getRowValue(r, progRow, null, null);
+                        if (!val && r.type !== 'text-free') return;
                         html += buildFieldHTML(r, val);
                     });
                 }
@@ -783,9 +783,9 @@
                         html += `<div style="margin-bottom:6px;padding:5px 8px;border:1px solid #003366;border-radius:3px">`;
                         html += `<div style="font-weight:700;color:#003366;font-size:10px;margin-bottom:4px">Prestación ${pi + 1}: ${prestName}</div>`;
                         sec.rows.forEach(r => {
-                            if (r.sheet !== 'prest') return;
-                            const val = getVal(pr, prestH, r.col);
-                            if (!val) return;
+                            if (r.sheet && r.sheet !== 'prest' && !r.type) return;
+                            const val = getRowValue(r, progRow, pr, null);
+                            if (!val && r.type !== 'text-free') return;
                             html += buildFieldHTML(r, val);
                         });
 
@@ -809,20 +809,20 @@
                                 // Buscar si algún row tiene flag table
                                 const hasTable = indSec.rows.some(r => r.table);
                                 if (hasTable) {
-                                    const tableCols = indSec.rows.filter(r => r.sheet === 'ind');
+                                    const tableCols = indSec.rows.filter(r => (r.sheet === 'ind' || r.type) && r.table);
                                     html += `<div style="margin-top:6px"><div style="font-size:9px;font-weight:700;margin-bottom:3px">Indicadores</div>`;
                                     html += `<table><thead><tr>${tableCols.map(r => `<th>${r.label}</th>`).join('')}</tr></thead><tbody>`;
                                     relInds.forEach(ir => {
-                                        html += `<tr>${tableCols.map(r => `<td>${getVal(ir, indH, r.col) || 'S/I'}</td>`).join('')}</tr>`;
+                                        html += `<tr>${tableCols.map(r => `<td>${getRowValue(r, progRow, pr, ir) || 'S/I'}</td>`).join('')}</tr>`;
                                     });
                                     html += `</tbody></table></div>`;
                                 } else {
                                     html += `<div style="margin-top:4px;font-size:9px;font-weight:700">Indicadores:</div>`;
                                     relInds.forEach(ir => {
                                         indSec.rows.forEach(r => {
-                                            if (r.sheet !== 'ind') return;
-                                            const val = getVal(ir, indH, r.col);
-                                            if (!val) return;
+                                            if (r.sheet && r.sheet !== 'ind' && !r.type) return;
+                                            const val = getRowValue(r, progRow, pr, ir);
+                                            if (!val && r.type !== 'text-free') return;
                                             html += buildFieldHTML(r, val);
                                         });
                                     });
@@ -843,13 +843,23 @@
                         : indRows;
                     if (relInds.length === 0) return;
                     html += `<div class="pdf-sec">${sec.title}</div>`;
-                    const tableCols = sec.rows.filter(r => r.sheet === 'ind');
-                    if (tableCols.length > 0) {
+                    const hasTable = sec.rows.some(r => r.table);
+                    const tableCols = sec.rows.filter(r => (r.sheet === 'ind' || r.type) && r.table);
+                    if (hasTable && tableCols.length > 0) {
                         html += `<table><thead><tr>${tableCols.map(r => `<th>${r.label}</th>`).join('')}</tr></thead><tbody>`;
                         relInds.forEach(ir => {
-                            html += `<tr>${tableCols.map(r => `<td>${getVal(ir, indH, r.col) || 'S/I'}</td>`).join('')}</tr>`;
+                            html += `<tr>${tableCols.map(r => `<td>${getRowValue(r, progRow, null, ir) || 'S/I'}</td>`).join('')}</tr>`;
                         });
                         html += `</tbody></table>`;
+                    } else {
+                        relInds.forEach(ir => {
+                            sec.rows.forEach(r => {
+                                if (r.sheet && r.sheet !== 'ind' && !r.type) return;
+                                const val = getRowValue(r, progRow, null, ir);
+                                if (!val && r.type !== 'text-free') return;
+                                html += buildFieldHTML(r, val);
+                            });
+                        });
                     }
                 }
             });

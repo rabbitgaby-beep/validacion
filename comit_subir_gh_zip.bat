@@ -27,7 +27,7 @@ for /f "tokens=1-2 delims=:" %%a in ("%time: =0%") do (
 set FECHA_HORA=%DIA%_%MES%_%ANIO%_%HORA%_%MIN%
 
 :: ── Rutas ─────────────────────────────────────────────────
-set CARPETA=K:\programacion_ia\Validacion_Template_1
+set CARPETA=K:\programacion_ia
 set NOMBRE_ZIP=Validacion_Template_1_%COMENTARIO%_%FECHA_HORA%.zip
 set RUTA_ZIP=%CARPETA%\%NOMBRE_ZIP%
 
