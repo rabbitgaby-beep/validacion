@@ -1100,35 +1100,35 @@
 
         .pdf-doc {
             background: #fff;
-            color: #222;
+            color: #333;
             max-width: 780px;
             margin: 0 auto 24px;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
             font-family: var(--font);
-            font-size: 11pt;
+            font-size: 11pt; /* 9-10pt requested for body but user specified 11pt Montserrat for items */
             line-height: 1.5;
-            padding: 20mm 20mm;
+            padding: 40pt; /* ~1.4cm = sincronizado con pageMargins [40,40,40,40] */
         }
 
         .pdf-doc h1 {
-            font-size: 16pt;
-            text-align: center;
-            color: #003366;
-            border-bottom: 2px solid #003366;
+            font-size: 18pt;
+            text-align: left;
+            color: #44658F;
+            border-bottom: 2px solid #44658F;
             padding-bottom: 8px;
             margin-bottom: 16px;
             text-transform: uppercase;
         }
 
         .pdf-doc .pdf-sec {
-            font-size: 11pt;
+            font-size: 16pt;
             font-weight: 700;
-            color: #004080;
+            color: #44658F;
             text-transform: uppercase;
             margin: 16px 0 6px;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #e0e0e0;
             padding-bottom: 3px;
         }
 
@@ -1177,7 +1177,7 @@
         }
 
         .pdf-doc .prog-sep {
-            border-top: 3px solid #003366;
+            border-top: 3px solid #44658F;
             margin: 24px 0;
         }
 

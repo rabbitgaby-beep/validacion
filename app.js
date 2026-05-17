@@ -1122,7 +1122,14 @@
             const docTitle = state.pdfConfig.title || 'Informe de Programas Sociales';
             
             // Portada
-            content.push({ text: docTitle, style: 'docTitle', pageBreak: 'after' });
+            content.push({ 
+                stack: [
+                    { text: docTitle.toUpperCase(), style: 'docTitle' },
+                    { text: 'CONSEJO NACIONAL DE COORDINACIÓN DE POLÍTICAS SOCIALES', style: 'docSub' }
+                ],
+                margin: [0, 150, 0, 0],
+                pageBreak: 'after' 
+            });
 
             const groupKeys = Object.keys(groups);
             const CONTENT_WIDTH = 515; // A4 pt aprox
@@ -1137,7 +1144,7 @@
 
                     content.push({ text: progName.toUpperCase(), style: 'progTitle' });
                     content.push({
-                        canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 2, lineColor: '#003366' }],
+                        canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 2, lineColor: '#44658F' }],
                         margin: [0, 0, 0, 16]
                     });
 
@@ -1292,23 +1299,26 @@
             });
 
             return {
+                pageMargins: [40, 40, 40, 40],
                 content: content,
                 styles: {
-                    docTitle: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 200, 0, 0] },
-                    groupTitle: { fontSize: 18, bold: true, color: '#003366', margin: [0, 0, 0, 10] },
-                    progTitle: { fontSize: 16, bold: true, color: '#003366', alignment: 'center', margin: [0, 0, 0, 8] },
-                    secTitle: { fontSize: 11, bold: true, color: '#004080', margin: [0, 16, 0, 3] },
-                    prestSub: { fontSize: 11, bold: true, color: '#27ae60', margin: [0, 5, 0, 5] },
+                    docTitle: { fontSize: 30, bold: true, alignment: 'left', color: '#44658F', margin: [0, 0, 0, 10] },
+                    docSub: { fontSize: 17, bold: true, alignment: 'left', color: '#5A5A5A', margin: [0, 0, 0, 10] },
+                    groupTitle: { fontSize: 18, bold: true, color: '#44658F', margin: [0, 0, 0, 10] },
+                    progTitle: { fontSize: 18, bold: true, color: '#44658F', alignment: 'left', margin: [0, 0, 0, 16] },
+                    secTitle: { fontSize: 16, bold: true, color: '#44658F', margin: [0, 16, 0, 6] },
+                    prestSub: { fontSize: 14, bold: true, color: '#000000', margin: [0, 5, 0, 5] },
                     tableTitle: { fontSize: 10, bold: true },
                     th: { bold: true, fontSize: 9, color: '#333333', fillColor: '#f0f0f0', alignment: 'left' },
                     td: { fontSize: 9, color: '#333333' },
-                    fieldNormal: { fontSize: 10, margin: [0, 0, 0, 5], color: '#222222' },
-                    fieldBold: { fontSize: 10, bold: true, margin: [0, 0, 0, 5], color: '#222222' },
-                    fieldBig: { fontSize: 13, margin: [0, 0, 0, 5], color: '#222222' }
+                    fieldNormal: { fontSize: 10, margin: [0, 0, 0, 5], color: '#333333' },
+                    fieldBold: { fontSize: 10, bold: true, margin: [0, 0, 0, 5], color: '#333333' },
+                    fieldBig: { fontSize: 13, margin: [0, 0, 0, 5], color: '#333333' }
                 },
                 defaultStyle: {
                     font: 'Montserrat',
-                    color: '#222222'
+                    color: '#333333',
+                    fontSize: 10
                 }
             };
         }
