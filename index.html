@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISAPP — Generador de Reportes PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div id="app">
+
+        <!-- TOP BAR -->
+        <div class="topbar">
+            <div class="topbar-logo">SIEMPRO <span>·</span> Generador de Reportes</div>
+            <div class="topbar-step">
+                <div class="step-pill active" id="pill-1">① Cargar Excel</div>
+                <span class="step-sep">›</span>
+                <div class="step-pill" id="pill-2">② Armar Plantilla</div>
+                <span class="step-sep">›</span>
+                <div class="step-pill" id="pill-3">③ Generar PDFs</div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main">
+
+            <!-- PANEL IZQUIERDO -->
+            <div id="panel-fields">
+                <div class="panel-header">Campos del Excel</div>
+
+                <!-- Upload zone -->
+                <div id="upload-zone" class="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📊</div>
+                    <div class="upload-text">
+                        <strong>Arrastrá o hacé click</strong><br>
+                        para cargar el Excel<br>
+                        <span style="color:var(--text3); font-size:10px;">.xlsx — programas / prestaciones /
+                            indicadores</span>
+                    </div>
+                </div>
+                <input type="file" id="file-input" accept=".xlsx,.xls">
+
+                <div id="fields-container" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+                    <div class="sheet-tabs">
+                        <button class="sheet-tab active-prog" id="tab-prog"
+                            onclick="switchTab('prog')">Programas</button>
+                        <button class="sheet-tab" id="tab-prest" onclick="switchTab('prest')">Prestaciones</button>
+                        <button class="sheet-tab" id="tab-ind" onclick="switchTab('ind')">Indicadores</button>
+                    </div>
+                    <div class="fields-list" id="fields-list"></div>
+                </div>
+            </div>
+
+            <!-- PANEL CENTRAL — PLANTILLA -->
+            <div id="panel-template">
+                <div class="template-toolbar">
+                    <span class="toolbar-label">Secciones:</span>
+                    <button class="section-btn" onclick="addSection('Información Básica', 'prog')">+ Sección
+                        Programa</button>
+                    <button class="section-btn" onclick="addSection('Prestaciones', 'prest')">+ Sección
+                        Prestaciones</button>
+                    <button class="section-btn" onclick="addSection('Indicadores', 'ind')">+ Sección
+                        Indicadores</button>
+                    <div class="spacer"></div>
+                    <button class="action-btn btn-clear" onclick="clearTemplate()">Limpiar</button>
+                    <button class="action-btn btn-preview" onclick="showPreview()">Vista previa</button>
+                    <button class="action-btn btn-generate" id="btn-generate" onclick="generateAll()" disabled>⬇ Generar
+                        PDFs</button>
+                </div>
+
+                <div class="template-canvas" id="template-canvas">
+                    <div class="empty-state" id="template-empty">
+                        <div class="empty-icon">📋</div>
+                        <strong style="color:var(--text2)">Cargá un Excel primero</strong><br>
+                        Luego arrastrá campos desde la izquierda<br>hacia las secciones de la plantilla,<br>o usá los
+                        botones de arriba para agregar secciones.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO -->
+            <div id="panel-preview">
+                <div class="preview-header">
+                    <span>Panel Derecho</span>
+                </div>
+                <div class="preview-tabs">
+                    <button class="preview-tab active" id="rtab-stats" onclick="switchRightTab('stats')">Datos</button>
+                    <button class="preview-tab" id="rtab-config" onclick="switchRightTab('config')">Config PDF</button>
+                    <button class="preview-tab" id="rtab-preview" onclick="switchRightTab('preview')">Preview</button>
+                </div>
+                <div class="preview-body" id="right-panel-body">
+                    <div class="empty-state">
+                        <div class="empty-icon">📂</div>
+                        Cargá un Excel para ver estadísticas
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /main -->
+    </div><!-- /app -->
+
+    <!-- MODAL PREVIEW -->
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-head">
+                <div class="modal-title">Vista Previa — Primer Programa</div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- OUTPUT PAGE -->
+    <div id="output-page">
+        <div class="output-bar">
+            <button class="action-btn btn-clear" onclick="closeOutput()" style="border-color:var(--border)">←
+                Volver</button>
+            <div class="output-title" id="output-title">Reportes Generados</div>
+            <div class="download-btns">
+                <button class="action-btn btn-preview" onclick="printCurrent()">🖨 Imprimir actual</button>
+                <button class="action-btn btn-generate" onclick="downloadPDF()">⬇ Guardar todo como PDF</button>
+            </div>
+        </div>
+        <div class="output-list">
+            <div class="org-sidebar" id="org-sidebar"></div>
+            <div class="pdf-container" id="pdf-container"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
