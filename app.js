@@ -1133,8 +1133,24 @@
                 pageBreak: 'after' 
             });
 
-            const groupKeys = Object.keys(groups);
             const CONTENT_WIDTH = 515; // A4 pt aprox
+
+            // Índice de contenidos
+            content.push({ text: 'ÍNDICE', style: 'tocTitle' });
+            content.push({
+                canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 2, lineColor: '#44658F' }],
+                margin: [0, 0, 0, 16]
+            });
+            content.push({
+                toc: {
+                    id: 'mainToc',
+                    textStyle: { font: 'Montserrat', fontSize: 11, margin: [0, 0, 0, 5] },
+                    numberStyle: { font: 'Montserrat', fontSize: 11, margin: [0, 0, 0, 5] }
+                },
+                pageBreak: 'after'
+            });
+
+            const groupKeys = Object.keys(groups);
             
             groupKeys.forEach((g, gIdx) => {
                 const rows = groups[g];
@@ -1144,7 +1160,12 @@
                         getVal(progRow, progH, 'Nombre del programa precargado') ||
                         `Programa ${pIdx + 1}`;
 
-                    content.push({ text: progName.toUpperCase(), style: 'progTitle' });
+                    content.push({ 
+                        text: progName.toUpperCase(), 
+                        style: 'progTitle', 
+                        tocItem: 'mainToc',
+                        tocStyle: { font: 'Montserrat', fontSize: 11, margin: [0, 0, 0, 5] }
+                    });
                     content.push({
                         canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 2, lineColor: '#44658F' }],
                         margin: [0, 0, 0, 16]
@@ -1337,6 +1358,7 @@
                     docTitle: { fontSize: 30, bold: true, alignment: 'left', color: '#44658F', margin: [0, 0, 0, 10] },
                     docSub: { fontSize: 17, bold: true, alignment: 'left', color: '#5A5A5A', margin: [0, 0, 0, 10] },
                     groupTitle: { fontSize: 18, bold: true, color: '#44658F', margin: [0, 0, 0, 10] },
+                    tocTitle: { fontSize: 18, bold: true, color: '#44658F', margin: [0, 0, 0, 8] },
                     progTitle: { fontSize: 18, bold: true, color: '#44658F', alignment: 'left', margin: [0, 0, 0, 16] },
                     secTitle: { fontSize: 16, bold: true, color: '#44658F', margin: [0, 16, 0, 6] },
                     prestSub: { fontSize: 14, bold: true, color: '#000000', margin: [0, 5, 0, 5] },
