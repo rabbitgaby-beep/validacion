@@ -1316,6 +1316,18 @@
                     }
                     return null;
                 },
+                footer: function(currentPage, pageCount) {
+                    // La portada (página 1) no lleva número
+                    if (currentPage === 1) return null;
+                    
+                    return {
+                        text: currentPage.toString(),
+                        alignment: 'right', // Siempre a la derecha
+                        color: '#000000',
+                        // Margen para alinear con el margen derecho de la hoja
+                        margin: [0, 10, 40, 0] 
+                    };
+                },
                 content: content,
                 styles: {
                     docTitle: { fontSize: 30, bold: true, alignment: 'left', color: '#44658F', margin: [0, 0, 0, 10] },
