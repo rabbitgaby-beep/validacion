@@ -427,10 +427,56 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
-            background: var(--bg3);
-            cursor: pointer;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.2);
             border-bottom: 1px solid var(--border);
+        }
+        
+        .section-drag-handle {
+            cursor: grab;
+            color: var(--text3);
+            font-size: 16px;
+            user-select: none;
+            padding: 4px;
+        }
+        .section-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .sec-move-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-right: 4px;
+        }
+
+        .sec-btn-move {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text2);
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            line-height: 1;
+            transition: 0.2s;
+        }
+
+        .sec-btn-move:hover:not(:disabled) {
+            background: var(--bg3);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .sec-btn-move:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .section-color {
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
         }
 
         .section-title-input {

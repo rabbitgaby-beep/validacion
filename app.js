@@ -374,13 +374,21 @@
             renderTemplate();
             renderFieldList();
         }
-
         function deleteRow(secId, colKey) {
             const sec = state.sections.find(s => s.id === secId);
             if (!sec) return;
             sec.rows = sec.rows.filter(r => (r.sheet + '::' + r.col) !== colKey);
             renderTemplate();
             renderFieldList();
+        }
+
+        function moveSection(idx, dir) {
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= state.sections.length) return;
+            const temp = state.sections[idx];
+            state.sections[idx] = state.sections[newIdx];
+            state.sections[newIdx] = temp;
+            renderTemplate();
         }
 
         function toggleFmt(secId, colKey, fmt) {
@@ -423,7 +431,7 @@
 
             canvas.innerHTML = '';
 
-            state.sections.forEach(sec => {
+            state.sections.forEach((sec, secIndex) => {
                 const color = SECTION_COLORS[sec.type] || SECTION_COLORS.mixed;
                 const colKey = c => `${c.sheet}::${c.col}`;
 
@@ -478,16 +486,25 @@
 
                 const el = document.createElement('div');
                 el.className = 'template-section';
-                el.draggable = true;
                 el.ondragstart = (e) => onSecDragStart(e, secIndex);
                 el.ondragend = (e) => onSecDragEnd(e);
                 el.ondragenter = (e) => onSecDragEnter(e);
                 el.ondragover = (e) => onSecDragOver(e);
                 el.ondrop = (e) => onSecDrop(e, secIndex);
 
+                const upDisabled = secIndex === 0 ? 'disabled' : '';
+                const downDisabled = secIndex === state.sections.length - 1 ? 'disabled' : '';
+
                 el.innerHTML = `
       <div class="section-header">
-        <span class="section-drag-handle" style="cursor: grab; margin-right: 8px; color: var(--text3);" title="Arrastrar sección">⣿</span>
+        <span class="section-drag-handle" title="Arrastrar sección"
+              onmousedown="this.closest('.template-section').draggable = true;"
+              onmouseup="this.closest('.template-section').draggable = false;"
+              onmouseleave="this.closest('.template-section').draggable = false;">⣿</span>
+        <div class="sec-move-btns">
+            <button class="sec-btn-move" aria-label="Mover arriba" onclick="moveSection(${secIndex}, -1)" ${upDisabled}>↑</button>
+            <button class="sec-btn-move" aria-label="Mover abajo" onclick="moveSection(${secIndex}, 1)" ${downDisabled}>↓</button>
+        </div>
         <span class="section-color" style="background:${color}; border-radius:2px"></span>
         <input class="section-title-input" type="text" value="${escAttr(sec.title)}"
           onchange="updateSectionTitle('${sec.id}',this.value)"
