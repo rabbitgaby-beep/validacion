@@ -880,6 +880,21 @@
             display: flex;
         }
 
+        .template-section {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .template-section.dragging-sec {
+            opacity: 0.5;
+            border: 2px dashed var(--accent);
+            transform: scale(0.98);
+        }
+
         .modal-box {
             background: var(--bg2);
             border: 1px solid var(--border);

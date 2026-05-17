@@ -193,6 +193,7 @@
         }
         function onDropZoneDrop(e, secId) {
             e.preventDefault();
+            e.stopPropagation();
             document.getElementById('dz-' + secId).classList.remove('drag-over');
             
             let sheet = null;
@@ -200,6 +201,16 @@
 
             try {
                 const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.type === 'reorder-sec') {
+                    const sourceIdx = data.idx;
+                    const targetIdx = state.sections.findIndex(s => s.id === secId);
+                    if (sourceIdx !== -1 && targetIdx !== -1 && sourceIdx !== targetIdx) {
+                        const movedSec = state.sections.splice(sourceIdx, 1)[0];
+                        state.sections.splice(targetIdx, 0, movedSec);
+                        renderTemplate();
+                    }
+                    return;
+                }
                 if (data && data.sheet && data.col) {
                     sheet = data.sheet;
                     col = data.col;
@@ -217,6 +228,43 @@
                 addRowToSection(secId, sheet, col);
             }
             draggedField = null;
+        }
+
+        // --- DRAG & DROP PARA SECCIONES ---
+        function onSecDragStart(e, secIdx) {
+            e.stopPropagation();
+            draggedField = null;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'reorder-sec', idx: secIdx }));
+            setTimeout(() => e.target.classList.add('dragging-sec'), 0);
+        }
+        function onSecDragEnd(e) {
+            e.stopPropagation();
+            e.target.classList.remove('dragging-sec');
+        }
+        function onSecDragEnter(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        function onSecDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
+        }
+        function onSecDrop(e, targetIdx) {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.type === 'reorder-sec') {
+                    const sourceIdx = data.idx;
+                    if (sourceIdx !== -1 && targetIdx !== -1 && sourceIdx !== targetIdx) {
+                        const movedSec = state.sections.splice(sourceIdx, 1)[0];
+                        state.sections.splice(targetIdx, 0, movedSec);
+                        renderTemplate();
+                    }
+                }
+            } catch (err) {}
         }
 
         function onRowDragStart(e, secId, idx) {
@@ -245,6 +293,16 @@
             
             try {
                 const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.type === 'reorder-sec') {
+                    const sourceIdx = data.idx;
+                    const destIdx = state.sections.findIndex(s => s.id === targetSecId);
+                    if (sourceIdx !== -1 && destIdx !== -1 && sourceIdx !== destIdx) {
+                        const movedSec = state.sections.splice(sourceIdx, 1)[0];
+                        state.sections.splice(destIdx, 0, movedSec);
+                        renderTemplate();
+                    }
+                    return;
+                }
                 if (data.type === 'reorder') {
                     const sec = state.sections.find(s => s.id === data.secId);
                     const targetSec = state.sections.find(s => s.id === targetSecId);
@@ -418,8 +476,16 @@
 
                 const el = document.createElement('div');
                 el.className = 'template-section';
+                el.draggable = true;
+                el.ondragstart = (e) => onSecDragStart(e, secIndex);
+                el.ondragend = (e) => onSecDragEnd(e);
+                el.ondragenter = (e) => onSecDragEnter(e);
+                el.ondragover = (e) => onSecDragOver(e);
+                el.ondrop = (e) => onSecDrop(e, secIndex);
+
                 el.innerHTML = `
       <div class="section-header">
+        <span class="section-drag-handle" style="cursor: grab; margin-right: 8px; color: var(--text3);" title="Arrastrar sección">⣿</span>
         <span class="section-color" style="background:${color}; border-radius:2px"></span>
         <input class="section-title-input" type="text" value="${escAttr(sec.title)}"
           onchange="updateSectionTitle('${sec.id}',this.value)"
