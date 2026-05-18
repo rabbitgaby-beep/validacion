@@ -40,6 +40,12 @@ uploadZone.addEventListener('drop', e => {
     if (file) loadExcel(file);
 });
 fileInput.addEventListener('change', e => { if (e.target.files[0]) loadExcel(e.target.files[0]); });
+document.getElementById('config-file-input').addEventListener('change', e => {
+    if (e.target.files[0]) {
+        loadConfig(e.target.files[0]);
+        e.target.value = ''; // Reset para permitir cargar el mismo archivo de nuevo
+    }
+});
 
 function loadExcel(file) {
     const reader = new FileReader();
@@ -831,6 +837,20 @@ function renderConfigPanel(body) {
       <select class="config-input config-select" onchange="state.fkPrestInd=this.value">
         ${(state.headers.ind || []).map(c => `<option value="${escAttr(c)}" ${state.fkPrestInd === c ? 'selected' : ''}>${c}</option>`).join('')}
       </select>
+    </div>
+    <div class="config-section" style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+        <div class="config-title">Configuración</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="action-btn btn-save-config" onclick="saveConfig()" style="flex:1; justify-content:center;">
+                💾 Guardar config JSON
+            </button>
+            <button class="action-btn btn-load-config" onclick="document.getElementById('config-file-input').click()" style="flex:1; justify-content:center;">
+                📂 Cargar config JSON
+            </button>
+        </div>
+        <div style="font-size:10px; color:var(--text3); margin-top:8px; line-height:1.4;">
+            Guardá el mapeo de campos, FKs y configuración del PDF para reutilizar con distintos Excel.
+        </div>
     </div>`;
     renderCoverElements();
 }
@@ -1609,7 +1629,7 @@ function buildDefaultTemplate() {
     addSec('Características del Programa', 'prog', [
         ['prog', 'Temática', 'Temática'],
         ['prog', 'Sistema', 'Sistema'],
-        ['prog', 'Objetivo general', 'Objetivo General', 'bold'],
+        ['prog', 'Objetivo general', 'Objetivo General'],
         ['prog', 'Objetivo específico', 'Objetivos Específicos'],
         ['prog', 'Plan', 'Plan'],
         ['prog', 'Programa precedente', 'Programa Precedente'],
@@ -1650,3 +1670,100 @@ uploadZone.addEventListener('drop', () => {
         if (state.headers.prog && state.sections.length === 0) buildDefaultTemplate();
     }, 500);
 });
+
+// ══════════════════════════════════════════
+// UTILIDADES Y CONFIGURACIÓN
+// ══════════════════════════════════════════
+
+function showToast(message, type = 'success') {
+    // Remover toast existente si hay uno
+    const existing = document.querySelector('.gava-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `gava-toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('show'));
+    });
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function saveConfig() {
+    const config = {
+        "gava_version": "1.0",
+        "saved_at": new Date().toISOString(),
+        "template": {
+            "sections": JSON.parse(JSON.stringify(state.sections)),
+            "sectionCounter": sectionCounter
+        },
+        "pdfConfig": {
+            "title": state.pdfConfig.title,
+            "groupBy": state.pdfConfig.groupBy,
+            "filterVigor": state.pdfConfig.filterVigor,
+            "vigorCol": state.pdfConfig.vigorCol,
+            "coverElements": JSON.parse(JSON.stringify(state.pdfConfig.coverElements))
+        },
+        "fkConfig": {
+            "fkProgPrest": state.fkProgPrest,
+            "fkProgInd": state.fkProgInd,
+            "fkPrestInd": state.fkPrestInd
+        }
+    };
+
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `gava-config-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    showToast('✓ Configuración guardada como JSON');
+}
+
+function loadConfig(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const config = JSON.parse(e.target.result);
+            
+            // Validaciones
+            if (!config.gava_version || !config.template || !Array.isArray(config.template.sections) || !config.pdfConfig) {
+                alert('Archivo de configuración inválido o corrupto.');
+                return;
+            }
+
+            // Aplicar estado
+            state.sections = config.template.sections;
+            sectionCounter = config.template.sectionCounter || state.sections.length;
+            
+            state.pdfConfig.title = config.pdfConfig.title || '';
+            state.pdfConfig.groupBy = config.pdfConfig.groupBy || '';
+            state.pdfConfig.filterVigor = config.pdfConfig.filterVigor !== undefined ? config.pdfConfig.filterVigor : true;
+            state.pdfConfig.vigorCol = config.pdfConfig.vigorCol || '';
+            state.pdfConfig.coverElements = config.pdfConfig.coverElements || [];
+            
+            state.fkProgPrest = config.fkConfig?.fkProgPrest || '';
+            state.fkProgInd = config.fkConfig?.fkProgInd || '';
+            state.fkPrestInd = config.fkConfig?.fkPrestInd || '';
+
+            // Actualizar UI
+            renderTemplate();
+            renderFieldList();
+            updateRightPanel();
+            updateStepPills(2);
+
+            showToast(`✓ Configuración cargada — ${state.sections.length} secciones`);
+        } catch (err) {
+            alert('Error al leer la configuración: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}

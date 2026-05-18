@@ -26,6 +26,16 @@
                 <span class="step-sep">›</span>
                 <div class="step-pill" id="pill-3">③ Generar PDFs</div>
             </div>
+            <!-- Botones de configuración — van DESPUÉS de .topbar-step y ANTES del cierre de .topbar -->
+            <div class="topbar-config-btns" style="display:flex; align-items:center; gap:8px; margin-left:16px;">
+                <button class="action-btn btn-save-config" onclick="saveConfig()" title="Guardar configuración actual como JSON">
+                    💾 Guardar config
+                </button>
+                <button class="action-btn btn-load-config" onclick="document.getElementById('config-file-input').click()" title="Cargar configuración desde JSON">
+                    📂 Cargar config
+                </button>
+                <input type="file" id="config-file-input" accept=".json" style="display:none">
+            </div>
         </div>
 
         <!-- MAIN -->

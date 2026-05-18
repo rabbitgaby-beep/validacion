@@ -1287,3 +1287,58 @@
             accent-color: var(--accent);
             cursor: pointer;
         }
+
+        /* ───── BOTONES GUARDAR / CARGAR CONFIG ───── */
+        .btn-save-config {
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        .btn-save-config:hover {
+            background: var(--amber);
+            color: var(--bg);
+        }
+
+        .btn-load-config {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-load-config:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Notificación de éxito/error flotante */
+        .gava-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font);
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .25s, transform .25s;
+        }
+
+        .gava-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gava-toast.success {
+            background: #1a2d2a;
+            border: 1px solid var(--green);
+            color: var(--green);
+        }
+
+        .gava-toast.error {
+            background: #2d1a1a;
+            border: 1px solid var(--red);
+            color: var(--red);
+        }
